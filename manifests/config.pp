@@ -65,7 +65,7 @@ class postgresql::config(
 
   Class['postgresql::config'] ->
       Class['postgresql::config::beforeservice'] ->
-      Service['postgresqld'] ->
+      Service['pe-postgresql'] ->
       Class['postgresql::config::afterservice']
 
 

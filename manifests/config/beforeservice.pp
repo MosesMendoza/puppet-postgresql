@@ -66,7 +66,7 @@ class postgresql::config::beforeservice(
     path        => $postgresql_conf_path,
     match       => '^listen_addresses\s*=.*$',
     line        => "listen_addresses = '${listen_addresses}'",
-    notify      => Service['postgresqld'],
+    notify      => Service['pe-postgresql'],
   }
 
   # TODO: is this a reasonable place for this firewall stuff?

@@ -23,23 +23,23 @@ class postgresql::server (
   $config_hash      = {}
 ) inherits postgresql::params {
 
-  package { 'postgresql-server':
+  package { 'pe-postgresql-server':
     ensure  => $package_ensure,
     name    => $package_name,
-    tag     => 'postgresql',
+    tag     => 'pe-postgresql',
   }
 
   $config_class = {}
   $config_class['postgresql::config'] = $config_hash
 
   create_resources( 'class', $config_class )
-  
 
-  service { 'postgresqld':
+
+  service { 'pe-postgresql':
     ensure   => running,
     name     => $service_name,
     enable   => true,
-    require  => Package['postgresql-server'],
+    require  => Package['pe-postgresql-server'],
     provider => $service_provider,
     status   => $service_status,
   }
@@ -47,10 +47,10 @@ class postgresql::server (
   if ($postgresql::params::needs_initdb) {
     include postgresql::initdb
 
-    Package['postgresql-server'] -> Class['postgresql::initdb'] -> Class['postgresql::config'] -> Service['postgresqld']
-  } 
+    Package['pe-postgresql-server'] -> Class['postgresql::initdb'] -> Class['postgresql::config'] -> Service['pe-postgresql']
+  }
   else  {
-    Package['postgresql-server'] -> Class['postgresql::config'] -> Service['postgresqld']
+    Package['pe-postgresql-server'] -> Class['postgresql::config'] -> Service['pe-postgresql']
   }
 
   exec { 'reload_postgresql':
