@@ -28,12 +28,12 @@
 # correct paths to the postgres dirs.
 
 class postgresql::params(
-    $version               = $::postgres_default_version,
+    $version               = '9.1.6',
     $manage_package_repo   = false,
     $package_source        = undef,
 ) {
-  $user                         = 'postgres'
-  $group                        = 'postgres'
+  $user                         = 'pe-postgres'
+  $group                        = 'pe-postgres'
   $ip_mask_deny_postgres_user   = '0.0.0.0/0'
   $ip_mask_allow_all_users      = '127.0.0.1/32'
   $listen_addresses             = 'localhost'
@@ -42,30 +42,30 @@ class postgresql::params(
   # TODO: figure out a way to make this not platform-specific
   $manage_redhat_firewall       = false
 
+  # MM 12-28-2012 - for PE we actually don't want any of this
+  #if ($manage_package_repo) {
+  #    case $::osfamily {
+  #      'RedHat': {
+  #         $rh_pkg_source = pick($package_source, 'yum.postgresql.org')
 
-  if ($manage_package_repo) {
-      case $::osfamily {
-        'RedHat': {
-           $rh_pkg_source = pick($package_source, 'yum.postgresql.org')
+  #         case $rh_pkg_source {
+  #           'yum.postgresql.org': {
+  #              class { "postgresql::package_source::yum_postgresql_org":
+  #                version => $version
+  #              }
+  #           }
 
-           case $rh_pkg_source {
-             'yum.postgresql.org': {
-                class { "postgresql::package_source::yum_postgresql_org":
-                  version => $version
-                }
-             }
+  #           default: {
+  #             fail("Unsupported package source '${rh_pkg_source}' for ${::osfamily} OS family. Currently the only supported source is 'yum.postgresql.org'")
+  #           }
+  #         }
+  #      }
 
-             default: {
-               fail("Unsupported package source '${rh_pkg_source}' for ${::osfamily} OS family. Currently the only supported source is 'yum.postgresql.org'")
-             }
-           }
-        }
-
-        default: {
-          fail("Unsupported osfamily: ${::osfamily} operatingsystem: ${::operatingsystem}, module ${module_name} currently only supports osfamily RedHat and Debian")
-        }
-      }
-    }
+  #      default: {
+  #        fail("Unsupported osfamily: ${::osfamily} operatingsystem: ${::operatingsystem}, module ${module_name} currently only supports osfamily RedHat and Debian")
+  #      }
+  #    }
+  #  }
 
 
   # This is a bit hacky, but if the puppet nodes don't have pluginsync enabled,
@@ -74,78 +74,53 @@ class postgresql::params(
   # enabled and succeeded).  If not, we fail with a hint that tells the user
   # that pluginsync might not be enabled.  Ideally this would be handled directly
   # in puppet.
-  if ($::postgres_default_version == undef) {
-    fail "No value for postgres_default_version facter fact; it's possible that you don't have pluginsync enabled."
-  }
 
-  case $::operatingsystem {
-    default: {
-      $service_provider = undef
-    }
-  }
+  # 12-28-2012 MM
+  # We don't need this part because we know we'll be pluginsynced, and we don't wnat
+  # to use the default version anyway
+  #if ($::postgres_default_version == undef) {
+  #  fail "No value for postgres_default_version facter fact; it's possible that you don't have pluginsync enabled."
+  #}
 
-  case $::osfamily {
-    'RedHat': {
-      $needs_initdb             = true
-      $firewall_supported       = true
-      $persist_firewall_command = '/sbin/iptables-save > /etc/sysconfig/iptables'
+  #case $::operatingsystem {
+  #  default: {
+  #    $service_provider = undef
+  #  }
+  #}
 
-      if $version == $::postgres_default_version {
-        $client_package_name = 'postgresql'
-        $server_package_name = 'postgresql-server'
-        $devel_package_name  = 'postgresql-devel'
-        $service_name = 'postgresql'
-        $bindir       = '/usr/bin'
-        $datadir      = '/var/lib/pgsql/data'
-        $confdir      = $datadir
-      } else {
-        $version_parts       = split($version, '[.]')
-        $package_version     = "${version_parts[0]}${version_parts[1]}"
-        $client_package_name = "postgresql${package_version}"
-        $server_package_name = "postgresql${package_version}-server"
-        $devel_package_name  = "postgresql${package_version}-devel"
-        $service_name = "postgresql-${version}"
-        $bindir       = "/usr/pgsql-${version}/bin"
-        $datadir      = "/var/lib/pgsql/${version}/data"
-        $confdir      = $datadir
+  if ($::is_pe) {
+    $needs_initdb        = true
+    $firewall_supported  = true
+    $client_package_name = 'pe-postgresql'
+    $server_package_name = 'pe-postgresql-server'
+    $devel_package_name  = 'pe-postgresql-devel'
+    $service_name        = 'pe-postgresql'
+    $version_parts       = split($version, '[.]')
+    $package_version     = "${version_parts[0]}.${version_parts[1]}"
+    $bindir              = '/opt/puppet/bin'
+    $datadir             = "/opt/puppet/var/lib/pgsql/${package_version}/data"
+    $confdir             = $datadir
+    $service_status      = undef
+
+    case $::osfamily {
+      'RedHat': {
+        $persist_firewall_command = '/sbin/iptables-save > /etc/sysconfig/iptables'
       }
 
-      $service_status = undef
-    }
-
-    'Debian': {
-      $needs_initdb             = false
-      $firewall_supported       = false
-      # TODO: not exactly sure yet what the right thing to do for Debian/Ubuntu is.
-      #$persist_firewall_command = '/sbin/iptables-save > /etc/iptables/rules.v4'
-
-
-      case $::operatingsystem {
-        'Debian': {
-            $service_name = 'postgresql'
-        }
-
-        'Ubuntu': {
-            case $::lsbmajdistrelease {
-                # thanks, ubuntu
-                '10':       { $service_name = "postgresql-${version}" }
-                default:    { $service_name = 'postgresql' }
-            }
-        }
+      'Debian': {
+        # TODO: not exactly sure yet what the right thing to do for Debian/Ubuntu is.
+        #$persist_firewall_command = '/sbin/iptables-save > /etc/iptables/rules.v4'
       }
-
-      $client_package_name = "postgresql-client-${version}"
-      $server_package_name = "postgresql-${version}"
-      $devel_package_name  = 'libpq-dev'
-      $bindir              = "/usr/lib/postgresql/${version}/bin"
-      $datadir             = "/var/lib/postgresql/${version}/main"
-      $confdir             = "/etc/postgresql/${version}/main"
-      $service_status      = "/etc/init.d/${service_name} status | /bin/egrep -q 'Running clusters: .+'"
+      'Sles': {
+        # Is this even right? is Sles an OS family? Also, figure out the firewall
+        #$persist_firewall_command = '/sbin/iptables-save > /etc/iptables/rules.v4'
+      }
+      default: {
+        fail("Unsupported osfamily: ${::osfamily} operatingsystem: ${::operatingsystem}, module ${module_name} currently only supports osfamily RedHat and Debian")
+      }
     }
-
-    default: {
-      fail("Unsupported osfamily: ${::osfamily} operatingsystem: ${::operatingsystem}, module ${module_name} currently only supports osfamily RedHat and Debian")
-    }
+  } else {
+      fail("This module only works on Puppet Enterprise.")
   }
 
   $initdb_path          = "${bindir}/initdb"
