@@ -35,7 +35,7 @@ define postgresql::role(
   # TODO: FIXME: Will not correct the superuser / createdb / createrole / login status of a role that already exists
   postgresql_psql {"CREATE ROLE ${username} ENCRYPTED PASSWORD '${password_hash}' $login_sql $createrole_sql $createdb_sql $superuser_sql":
     db           => $db,
-    psql_user    => 'postgres',
+    psql_user    => $postgresql::params::user,
     unless       => "SELECT rolname FROM pg_roles WHERE rolname='$username'",
     cwd          => $postgresql::params::datadir,
   }
