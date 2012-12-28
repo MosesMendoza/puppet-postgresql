@@ -50,12 +50,12 @@ define postgresql::validate_db_connection(
     $database_password,
     $database_username,
     $client_package_name = $postgresql::params::client_package_name,
-    $database_port       = 5432
-) inherits postgresql::params {
+    $database_port       = 5432,
+) {
 
     # Make sure the postgres client package is installed; we need it for
     # `psql`.
-    package { 'postgresql-client':
+    package { 'pe-postgresql-client':
         ensure => present,
         name   => $client_package_name,
         tag    => 'postgresql',
@@ -70,7 +70,7 @@ define postgresql::validate_db_connection(
       cwd         => '/tmp',
       environment => "PGPASSWORD=${database_password}",
       logoutput   => 'on_failure',
-      require     => Package['postgresql-client'],
+      require     => Package['pe-postgresql-client'],
     }
 
     # This is a little bit of puppet magic.  What we want to do here is make
