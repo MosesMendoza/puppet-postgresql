@@ -25,7 +25,7 @@ class postgresql::initdb(
 ) inherits postgresql::params {
 
   $initdb_command = "${initdb_path} --encoding '${encoding}' --pgdata '${datadir}'"
-  
+
   exec { $initdb_command:
     creates => "${datadir}/PG_VERSION",
     user    => $user,
