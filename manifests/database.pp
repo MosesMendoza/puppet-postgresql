@@ -39,7 +39,7 @@ define postgresql::database(
 
   exec { $createdb_command :
     refreshonly => true,
-    user    => 'postgres',
+    user    => $postgresql::params::user,
     cwd     => $postgresql::params::datadir,
   } ~>
 

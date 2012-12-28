@@ -31,7 +31,7 @@ define postgresql::database_grant(
     $db,
     $role,
     $psql_db   = 'postgres',
-    $psql_user ='postgres'
+    $psql_user = $postgresql::params::user,
 ) {
   include postgresql::params
 
