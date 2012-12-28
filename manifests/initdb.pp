@@ -19,9 +19,9 @@
 class postgresql::initdb(
   $datadir     = $postgresql::params::datadir,
   $encoding    = 'UTF8',
-  $group       = 'postgres',
+  $group       = $postgresql::params::group,
   $initdb_path = $postgresql::params::initdb_path,
-  $user        = 'postgres'
+  $user        = $postgresql::params::user,
 ) inherits postgresql::params {
 
   $initdb_command = "${initdb_path} --encoding '${encoding}' --pgdata '${datadir}'"
