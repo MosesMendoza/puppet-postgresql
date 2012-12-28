@@ -32,15 +32,17 @@ define postgresql::database(
   $createdb_command = "${postgresql::params::createdb_path} --template=template0 --encoding '${charset}' ${locale_option} '${dbname}'"
 
   postgresql_psql { "Check for existence of db '$dbname'":
-    command => "SELECT 1",
-    unless  => "SELECT datname FROM pg_database WHERE datname='$dbname'",
-    cwd     => $postgresql::params::datadir,
+    command    => "SELECT 1",
+    unless     => "SELECT datname FROM pg_database WHERE datname='$dbname'",
+    cwd        => $postgresql::params::datadir,
+    psql_user  => $postgresql::params::user,
+    psql_group => $postgresql::params::group,
   } ~>
 
   exec { $createdb_command :
     refreshonly => true,
-    user    => $postgresql::params::user,
-    cwd     => $postgresql::params::datadir,
+    user        => $postgresql::params::user,
+    cwd         => $postgresql::params::datadir,
   } ~>
 
   # This will prevent users from connecting to the database unless they've been
@@ -49,6 +51,8 @@ define postgresql::database(
     db          => 'postgres',
     refreshonly => true,
     cwd         => $postgresql::params::datadir,
+    psql_user   => $postgresql::params::user,
+    psql_group  => $postgresql::params::group,
   }
 
 }
