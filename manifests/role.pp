@@ -36,7 +36,10 @@ define postgresql::role(
   postgresql_psql {"CREATE ROLE ${username} ENCRYPTED PASSWORD '${password_hash}' $login_sql $createrole_sql $createdb_sql $superuser_sql":
     db           => $db,
     psql_user    => $postgresql::params::user,
+    psql_group   => $postgresql::params::group,
+    default_db   => $postgresql::params::default_db,
     unless       => "SELECT rolname FROM pg_roles WHERE rolname='$username'",
     cwd          => $postgresql::params::datadir,
+
   }
 }
