@@ -34,7 +34,7 @@ class postgresql::params(
 ) {
   $user                         = 'pe-postgres'
   $group                        = 'pe-postgres'
-  $default_database             = 'postgres'
+  $default_db                   = 'postgres'
   $ip_mask_deny_postgres_user   = '0.0.0.0/0'
   $ip_mask_allow_all_users      = '127.0.0.1/32'
   $listen_addresses             = 'localhost'

@@ -45,6 +45,11 @@ Puppet::Type.newtype(:postgresql_psql) do
         "or not the main SQL command needs to be executed at all."
   end
 
+  newparam(:default_db) do
+    desc "The name of the default database to connect to for :unless commands"
+    defaultto("postgres")
+  end
+
   newparam(:db) do
     desc "The name of the database to execute the SQL command against."
   end

@@ -37,6 +37,7 @@ define postgresql::database(
     cwd        => $postgresql::params::datadir,
     psql_user  => $postgresql::params::user,
     psql_group => $postgresql::params::group,
+    default_db => $postgresql::params::default_db
   } ~>
 
   exec { $createdb_command :
@@ -53,6 +54,7 @@ define postgresql::database(
     cwd         => $postgresql::params::datadir,
     psql_user   => $postgresql::params::user,
     psql_group  => $postgresql::params::group,
+    default_db  => $postgresql::params::default_db
   }
 
 }
